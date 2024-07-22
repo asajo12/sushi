@@ -77,9 +77,7 @@ def main():
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
     pygame.display.set_caption('I Wanna Eat Sushi')
 
-##############
-#IMPORTING IMAGES
-##############
+    #load images
     sushi_img = pygame.image.load('img/sushi2.png')
     bg_img = pygame.image.load('img/bg.png').convert()
 
@@ -96,6 +94,9 @@ def main():
     clock = pygame.time.Clock()
     game_state = "START"
     
+    #initialize game start time
+    game_start_time = 0
+    
     while True:
         paused()
         if game_state == "START":
@@ -106,6 +107,8 @@ def main():
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_SPACE:
                         game_state = "RUNNING"
+                        # Reset game start time
+                        game_start_time = pygame.time.get_ticks()
         
             start.draw(screen)
             pygame.display.update()
@@ -115,7 +118,7 @@ def main():
             screen.fill((0, 0, 0)) 
             screen.blit(bg_img, (0,0))
             
-            #basic states
+            #handle events
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
@@ -124,11 +127,13 @@ def main():
                     if event.key == pygame.K_SPACE:
                         sushi_health = max_health
                         falling_obj.clear()
-                        game_state = "RUNNING"
+                        game_state = "START"
+                        game_start_time = 0
                     elif sushi_health <= 0:
                         game_state = "GAME_OVER"
+                        game_over_time = pygame.time.get_ticks() - game_start_time
             
-            #movement controls
+            #movement 
             key = pygame.key.get_pressed()
             if key[pygame.K_a]:
                 sushi_rect.x -= 10
@@ -141,24 +146,27 @@ def main():
             elif sushi_rect.right > SCREEN_WIDTH:
                 sushi_rect.right = SCREEN_WIDTH
             
-            time = pygame.time.get_ticks()
-                        
-            #rounds
-            if time >= 3000: #round 1
+            current_time = pygame.time.get_ticks() - game_start_time
+            
+            print(current_time)
+                
+            #spawn falling objects based on time
+            if current_time >= 3000: # Round 1
                 if random.random() < 0.01:
                     new_object = FallingObj(SCREEN_WIDTH)
                     falling_obj.append(new_object)
-            elif time >= 10000: #round 2
+            elif current_time >= 10000: # Round 2
                 if random.random() < 0.02:
                     new_object = FallingObj(SCREEN_WIDTH)
                     new_object.speed_y = random.randint(9,10)
                     falling_obj.append(new_object)
-            elif time >= 20000: #round 3
-                if random.random() < 0.03:
+            elif current_time >= 20000: # Round 3
+                if True:
                     new_object = FallingObj(SCREEN_WIDTH)
-                    new_object.speed_y = random.randint(35,40)
+                    new_object.speed_y = 10000
                     falling_obj.append(new_object)
             
+            #update and draw falling objects
             for obj in falling_obj:
                 obj.update()
                 obj.draw(screen)
@@ -169,6 +177,7 @@ def main():
                 
             falling_obj = [obj for obj in falling_obj if obj.rect.y <= SCREEN_HEIGHT]
     
+            #sushi health bar
             screen.blit(sushi_img, sushi_rect)
             draw_health_bar(screen, 650, 10, sushi_health)
             
@@ -185,10 +194,21 @@ def main():
                         sushi_health = max_health
                         falling_obj.clear()
                         game_state = "RUNNING"
+                        # Reset game start time
+                        game_start_time = pygame.time.get_ticks()
             
             end.draw(screen)
             
+            #display
+            time_text = font_medium.render(f"SCORE: {game_over_time // 1000} seconds", True, WHITE)
+            time_rect = time_text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 200))
+            screen.blit(time_text, time_rect)
+            
+            pygame.display.update()
+            
         pygame.display.update()
+
+
             
 if __name__ == "__main__":
     main()
