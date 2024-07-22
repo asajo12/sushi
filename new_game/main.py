@@ -1,5 +1,6 @@
-import pygame
-import random
+import pygame,random
+
+pygame.display.set_caption('I Wanna Eat Sushi')
 pygame.init()
 
 SCREEN_WIDTH = 800
@@ -21,9 +22,8 @@ class StartScreen:
         self.instruction_rect = self.instruction_text.get_rect(center=(SCREEN_WIDTH//2, SCREEN_HEIGHT//2 + 50))
 
     def draw(self, screen):
-        screen.fill(WHITE)
-        screen.blit(self.title_text, self.title_rect)
-        screen.blit(self.instruction_text, self.instruction_rect)
+        start_img = pygame.image.load('img/start_img.png').convert()
+        screen.blit(start_img, (0,0))
         
 class EndScreen:
     def __init__(self):
@@ -34,9 +34,9 @@ class EndScreen:
         self.instruction_rect = self.instruction_text.get_rect(center=(SCREEN_WIDTH//2, SCREEN_HEIGHT//2 + 50))
 
     def draw(self, screen):
-        screen.fill(WHITE)
-        screen.blit(self.title_text, self.title_rect)
-        screen.blit(self.instruction_text, self.instruction_rect)
+        start_img = pygame.image.load('img/end_img.png').convert()
+        screen.blit(start_img, (0,0))
+
         
 
 class FallingObj:
@@ -52,6 +52,18 @@ class FallingObj:
     
     def draw(self, screen):
         screen.blit(self.image, self.rect)
+        
+def paused():
+    pygame.mixer.music.pause()
+    
+def unpause():
+    global pause
+    pygame.mixer.music.unpause()
+    pause = False
+        
+def music():
+    pygame.mixer.music.load('audio/aisha_music.wav')
+    pygame.mixer.music.play(-1)
 
 
 def draw_health_bar(screen, x, y, health):
@@ -61,13 +73,17 @@ def draw_health_bar(screen, x, y, health):
 
 
 def main():
+    music()
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
     pygame.display.set_caption('I Wanna Eat Sushi')
 
-    sushi_img = pygame.image.load('img/sushi.png')
+##############
+#IMPORTING IMAGES
+##############
+    sushi_img = pygame.image.load('img/sushi2.png')
     bg_img = pygame.image.load('img/bg.png').convert()
 
-    sushi_rect = sushi_img.get_rect(center=(SCREEN_WIDTH // 1.05, SCREEN_HEIGHT // 1.05))
+    sushi_rect = sushi_img.get_rect(center=(SCREEN_WIDTH // 1.10, SCREEN_HEIGHT // 1.10))
     
     max_health = 100
     sushi_health = max_health
@@ -81,6 +97,7 @@ def main():
     game_state = "START"
     
     while True:
+        paused()
         if game_state == "START":
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -94,6 +111,7 @@ def main():
             pygame.display.update()
         
         elif game_state == "RUNNING":
+            unpause()
             screen.fill((0, 0, 0)) 
             screen.blit(bg_img, (0,0))
             
@@ -123,9 +141,23 @@ def main():
             elif sushi_rect.right > SCREEN_WIDTH:
                 sushi_rect.right = SCREEN_WIDTH
             
-            if random.random() < 0.01:
-                new_object = FallingObj(SCREEN_WIDTH)
-                falling_obj.append(new_object)
+            time = pygame.time.get_ticks()
+                        
+            #rounds
+            if time >= 3000: #round 1
+                if random.random() < 0.01:
+                    new_object = FallingObj(SCREEN_WIDTH)
+                    falling_obj.append(new_object)
+            elif time >= 10000: #round 2
+                if random.random() < 0.02:
+                    new_object = FallingObj(SCREEN_WIDTH)
+                    new_object.speed_y = random.randint(9,10)
+                    falling_obj.append(new_object)
+            elif time >= 20000: #round 3
+                if random.random() < 0.03:
+                    new_object = FallingObj(SCREEN_WIDTH)
+                    new_object.speed_y = random.randint(35,40)
+                    falling_obj.append(new_object)
             
             for obj in falling_obj:
                 obj.update()
@@ -154,10 +186,8 @@ def main():
                         falling_obj.clear()
                         game_state = "RUNNING"
             
-            screen.fill((232, 244, 234))  # Fill screen with light green color
             end.draw(screen)
             pygame.display.update()
-
-
-if __name__ == '__main__':
+            
+if __name__ == "__main__":
     main()
